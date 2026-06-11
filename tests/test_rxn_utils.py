@@ -159,52 +159,52 @@ class TestIsValidReaction:
     """Tests for the is_valid_reaction helper."""
 
     def test_valid_standard(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("CCO.CCO>>CCOCCO") is True
 
     def test_valid_standard_agent(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("C=C.CC(=O)O>O>CC(=O)OC") is True
 
     def test_valid_tilde(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("CC.O.[Na+]~[Cl-]>>CCO") is True
 
     def test_valid_extended(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("CC.O.[Na+].[Cl-]>>CCO |f:2.3|") is True
 
     def test_invalid_garbage(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("not_a_reaction") is False
 
     def test_invalid_garbage_fragments(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("CCO.garbage>>CCOCCO") is False
 
     def test_empty_is_invalid(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("") is False
         assert is_valid_reaction("   ") is False
         assert is_valid_reaction(None) is False  # type: ignore[arg-type]
 
     def test_empty_products_invalid_by_default(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("CCO>>") is False
 
     def test_empty_products_allowed_when_flag(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # Empty products are allowed when the flag is explicitly set
         assert is_valid_reaction("CCO>>", allow_empty_products=True) is True
         # Same for STANDARD_agent-style templates with empty products
         assert is_valid_reaction("CCO>O>", allow_empty_products=True) is True
 
     def test_empty_reactants_invalid(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction(">>CCO") is False
 
     def test_explicit_rxn_type(self):
-        from canonicalize import is_valid_reaction, STANDARD
+        from rxkit.canonicalize import is_valid_reaction, STANDARD
         # Pass an EXTENDED SMILES but tell the validator it is STANDARD.
         # The result should be False because the |f:...| marker is not a
         # valid molecule SMILES.
@@ -214,7 +214,7 @@ class TestIsValidReaction:
         assert is_valid_reaction(rxn) is True
 
     def test_too_many_sides(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # 4 '>' characters yields 5 sides
         assert is_valid_reaction("CCO>CCO>CCO>CCO>CCO") is False
 
@@ -223,18 +223,18 @@ class TestIsValidReactionStrict:
     """Tests for the ``is_strict`` mode of is_valid_reaction."""
 
     def test_duplicate_in_reactants_raises(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # Lenient mode: passes.  Strict mode: rejects duplicate reactant.
         assert is_valid_reaction("CCO.CCO>>CCOCCO") is True
         assert is_valid_reaction("CCO.CCO>>CCOCCO", is_strict=True) is False
 
     def test_duplicate_in_products_raises(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("CCOCCO>>CCO.CCO") is True
         assert is_valid_reaction("CCOCCO>>CCO.CCO", is_strict=True) is False
 
     def test_duplicate_in_reagents_raises(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         assert is_valid_reaction("CCN>c1ccccc1.c1ccccc1>CCNC(=O)c1ccccc1") is True
         assert (
             is_valid_reaction(
@@ -245,20 +245,20 @@ class TestIsValidReactionStrict:
         )
 
     def test_same_reactant_and_product_raises(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # No-op reaction: same molecule on both sides.
         assert is_valid_reaction("CCO>>CCO") is True
         assert is_valid_reaction("CCO>>CCO", is_strict=True) is False
 
     def test_reactant_in_products_raises(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # ``CCO`` appears as both reactant and product.  Not a pure
         # solvent-only reaction, so strict mode rejects it.
         assert is_valid_reaction("CCO.CCN>>CCO.CCN") is True
         assert is_valid_reaction("CCO.CCN>>CCO.CCN", is_strict=True) is False
 
     def test_reagent_appears_in_reactants_raises(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # Benzene appears as both reagent and reactant.
         assert is_valid_reaction("c1ccccc1.CC(=O)O>c1ccccc1>CC(=O)OC") is True
         assert (
@@ -270,7 +270,7 @@ class TestIsValidReactionStrict:
         )
 
     def test_solvent_all_three_sides_is_allowed(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # ``CCO`` is a solvent appearing on all three sides.  This is
         # the canonical "solvent-only" template and must be allowed
         # even in strict mode.
@@ -280,26 +280,26 @@ class TestIsValidReactionStrict:
         )
 
     def test_empty_fragment_raises(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # Consecutive dots
         assert is_valid_reaction("CCO..CCN>>CCNCCO") is False
         assert is_valid_reaction("CCO..CCN>>CCNCCO", is_strict=True) is False
 
     def test_leading_dot_fragment_raises(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # Leading dot — also an empty fragment.
         assert is_valid_reaction(".CCO>>CCO") is False
         assert is_valid_reaction(".CCO>>CCO", is_strict=True) is False
 
     def test_tilde_reaction_with_duplicate(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # Tilde reaction where two fragment groups are actually the
         # same compound.
         assert is_valid_reaction("CCO~CCO>>CCOCCO") is True
         assert is_valid_reaction("CCO~CCO>>CCOCCO", is_strict=True) is False
 
     def test_extended_reaction_with_duplicate(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # Same molecule in two different groups — also a duplicate.
         assert is_valid_reaction("CCO.CCO>>CCOCCO |f:0.1|") is True
         assert (
@@ -307,7 +307,7 @@ class TestIsValidReactionStrict:
         )
 
     def test_strict_passes_for_clean_reaction(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # A clean, well-formed reaction should still pass in strict mode.
         assert is_valid_reaction("CCO.CCN>>CCNCCO", is_strict=True) is True
         assert (
@@ -315,7 +315,7 @@ class TestIsValidReactionStrict:
         )
 
     def test_strict_canonicalisation_isolates_different_writings(self):
-        from canonicalize import is_valid_reaction
+        from rxkit.canonicalize import is_valid_reaction
         # ``CCO`` and ``OCC`` are the same molecule written differently.
         assert is_valid_reaction("CCO.OCC>>CCOCCO") is True
         assert is_valid_reaction("CCO.OCC>>CCOCCO", is_strict=True) is False

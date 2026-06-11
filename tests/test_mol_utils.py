@@ -127,16 +127,16 @@ class TestTildeStandardConversion:
     """Tests for tilde <-> standard reaction SMILES conversion."""
 
     def test_tilde_to_standard(self):
-        from canonicalize import tilde_to_standard
+        from rxkit.canonicalize import tilde_to_standard
         assert tilde_to_standard("CC.O.[Na+]~[Cl-]>>CCO") == "CC.O.[Na+].[Cl-]>>CCO"
 
     def test_standard_to_tilde_naive(self):
         """``standard_to_tilde`` is a string-level rewrite: ``.`` -> ``~`` everywhere on each side."""
-        from canonicalize import standard_to_tilde
+        from rxkit.canonicalize import standard_to_tilde
         assert standard_to_tilde("CC.O.[Na+].[Cl-]>>CCO") == "CC~O~[Na+]~[Cl-]>>CCO"
 
     def test_no_tilde_unchanged(self):
-        from canonicalize import tilde_to_standard
+        from rxkit.canonicalize import tilde_to_standard
         assert tilde_to_standard("CC.O>>CCO") == "CC.O>>CCO"
 
 
@@ -150,7 +150,7 @@ class TestExtendedTildeConversion:
     """
 
     def test_split_smiles_and_fragment_info(self):
-        from canonicalize import split_smiles_and_fragment_info
+        from rxkit.canonicalize import split_smiles_and_fragment_info
         pure, info = split_smiles_and_fragment_info(
             "CC.O.[Na+].[Cl-]>>CCO |f:2.3|"
         )
@@ -158,25 +158,25 @@ class TestExtendedTildeConversion:
         assert info == "|f:2.3|"
 
     def test_determine_fragment_groups(self):
-        from canonicalize import determine_fragment_groups
+        from rxkit.canonicalize import determine_fragment_groups
         assert determine_fragment_groups("|f:2.3|") == [[2, 3]]
         assert determine_fragment_groups("|f:0.2,5.6|") == [[0, 2], [5, 6]]
         assert determine_fragment_groups("") == []
 
     def test_user_requirement_extended_to_tilde(self):
         """The exact example from the user's request."""
-        from canonicalize import extended_to_tilde
+        from rxkit.canonicalize import extended_to_tilde
         src = "CC.O.[Na+].[Cl-]>>CCO |f:2.3|"
         expected = "CC.O.[Na+]~[Cl-]>>CCO"
         assert extended_to_tilde(src) == expected
 
     def test_roundtrip_tilde_to_extended(self):
-        from canonicalize import tilde_to_extended
+        from rxkit.canonicalize import tilde_to_extended
         result = tilde_to_extended("CC.O.[Na+]~[Cl-]>>CCO")
         assert result == "CC.O.[Na+].[Cl-]>>CCO |f:2.3|"
 
     def test_parse_extended(self):
-        from canonicalize import parse_extended_reaction_smiles
+        from rxkit.canonicalize import parse_extended_reaction_smiles
         r, a, p = parse_extended_reaction_smiles(
             "CC.O.[Na+].[Cl-]>>CCO |f:2.3|"
         )
@@ -186,7 +186,7 @@ class TestExtendedTildeConversion:
         assert p == ["CCO"]
 
     def test_parse_extended_groups_on_both_sides(self):
-        from canonicalize import parse_extended_reaction_smiles
+        from rxkit.canonicalize import parse_extended_reaction_smiles
         r, a, p = parse_extended_reaction_smiles(
             "CC.O.[Na+].[Cl-]>>CCO.[Na+].[Cl-] |f:2.3,5.6|"
         )
@@ -194,7 +194,7 @@ class TestExtendedTildeConversion:
         assert p == ["CCO", "[Na+].[Cl-]"]
 
     def test_to_extended_reaction_smiles(self):
-        from canonicalize import to_extended_reaction_smiles
+        from rxkit.canonicalize import to_extended_reaction_smiles
         result = to_extended_reaction_smiles(
             ["CC", "O", "[Na+].[Cl-]"], [], ["CCO"]
         )
@@ -202,19 +202,19 @@ class TestExtendedTildeConversion:
 
     def test_to_extended_no_groups_returns_standard(self):
         """If no compound has multiple fragments, the EXTENDED form is just STANDARD."""
-        from canonicalize import to_extended_reaction_smiles
+        from rxkit.canonicalize import to_extended_reaction_smiles
         result = to_extended_reaction_smiles(["CC", "O"], [], ["CCO"])
         assert result == "CC.O>>CCO"
 
     def test_parse_tilde_reaction_smiles(self):
-        from canonicalize import parse_tilde_reaction_smiles
+        from rxkit.canonicalize import parse_tilde_reaction_smiles
         r, a, p = parse_tilde_reaction_smiles("CC.O.[Na+]~[Cl-]>>CCO")
         assert r == ["CC", "O", "[Na+].[Cl-]"]
         assert a == []
         assert p == ["CCO"]
 
     def test_extended_to_standard_drops_fragment_info(self):
-        from canonicalize import extended_to_standard
+        from rxkit.canonicalize import extended_to_standard
         assert extended_to_standard(
             "CC.O.[Na+].[Cl-]>>CCO |f:2.3|"
         ) == "CC.O.[Na+].[Cl-]>>CCO"
@@ -224,54 +224,54 @@ class TestIsValidMolecule:
     """Tests for the is_valid_molecule helper."""
 
     def test_valid_simple(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule("CCO") is True
 
     def test_valid_aromatic(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule("c1ccccc1") is True
 
     def test_valid_ionic(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule("[Na+].[Cl-]") is True
 
     def test_invalid_garbage(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule("not_a_smiles") is False
 
     def test_invalid_unbalanced_bracket(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule("C[C") is False
 
     def test_empty_invalid_by_default(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule("") is False
 
     def test_empty_allowed_when_flag_set(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule("", allow_empty=True) is True
 
     def test_none_is_invalid(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule(None) is False  # type: ignore[arg-type]
 
     def test_non_string_is_invalid(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule(123) is False  # type: ignore[arg-type]
 
     def test_list_all_valid(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule(["CCO", "c1ccccc1", "[Na+]"]) is True
 
     def test_list_one_invalid(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule(["CCO", "not_a_smiles"]) is False
 
     def test_list_with_empty_invalid_by_default(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule(["CCO", ""]) is False
 
     def test_list_with_empty_allowed(self):
-        from canonicalize import is_valid_molecule
+        from rxkit.canonicalize import is_valid_molecule
         assert is_valid_molecule(["CCO", ""], allow_empty=True) is True
 

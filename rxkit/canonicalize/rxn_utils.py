@@ -538,7 +538,7 @@ def is_valid_reaction(rxn, rxn_type=None, allow_empty_products=False, is_strict=
         False
     """
     # Local import to avoid circular import at module load time
-    from canonicalize.mol_utils import is_valid_molecule
+    from .mol_utils import is_valid_molecule
 
     if not isinstance(rxn, str) or not rxn.strip():
         return False
