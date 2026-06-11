@@ -1,5 +1,6 @@
 import rdkit
 import pandas as pd
+import re
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 from rdkit.Chem import MolStandardize
@@ -23,6 +24,19 @@ def smi_tokenizer(smi):
     tokens = [token for token in regex.findall(smi)]
     assert smi == ''.join(tokens)
     return ' '.join(tokens)
+
+def detokenize_smiles(tokenized_smiles: str) -> str:
+    """
+    Detokenize a tokenized SMILES string (that contains spaces between the characters).
+
+    Args:
+        tokenized_smiles: tokenized SMILES, for instance 'C C ( C O ) = N >> C C ( C = O ) N'
+
+    Returns:
+        SMILES after detokenization, for instance 'CC(CO)=N>>CC(C=O)N'
+    """
+    return tokenized_smiles.replace(" ", "")
+
 
 def slf_tokenizer(smi):
     encoded_selfies = sf.encoder(smi)
@@ -74,3 +88,61 @@ def get_longest_smiles(smis):
         return sorted(smis_list, key=lambda s: len(s), reverse=True)[0]
     else:
         return ""
+
+import re
+
+_ISOTOPE_REMOVAL_REGEX = re.compile(r"(?<=\[)([0-9]+)(?=[A-Za-z])")
+
+
+def remove_isotope_information(rxn: str) -> str:
+    """
+    Function that removes the isotope information from a reaction SMILES.
+
+    For example [13CH3][13CH3] ---> [CH3][CH3].
+    """
+    return _ISOTOPE_REMOVAL_REGEX.sub("", rxn.strip())
+
+
+def is_valid_molecule(smi, allow_empty=False):
+    """
+    Return ``True`` if ``smi`` is a parseable, non-empty molecule SMILES.
+
+    Args:
+        smi: A SMILES string (or a list/tuple of SMILES strings).  If a
+            list is given, the function returns ``True`` only if every
+            element is a valid molecule SMILES.
+        allow_empty: If ``False`` (default), the empty string and
+            ``None`` are considered invalid.  Set to ``True`` to allow
+            empty inputs (e.g. for fields that may legitimately be blank).
+
+    Returns:
+        ``True`` if the SMILES is a valid molecule, ``False`` otherwise
+        (invalid SMILES, ``None``, non-string input, …).
+
+    Examples:
+        >>> is_valid_molecule("CCO")
+        True
+        >>> is_valid_molecule("not_a_smiles")
+        False
+        >>> is_valid_molecule(["CCO", "c1ccccc1"])
+        True
+        >>> is_valid_molecule(["CCO", ""])
+        False
+    """
+    # Iterable of SMILES: validate each one
+    if isinstance(smi, (list, tuple, set, frozenset)):
+        return all(is_valid_molecule(s, allow_empty=allow_empty) for s in smi)
+
+    if not isinstance(smi, str):
+        return False
+    if not smi.strip():
+        return allow_empty
+    try:
+        mol = Chem.MolFromSmiles(smi)
+    except Exception:
+        return False
+    if mol is None:
+        return False
+    # An empty Mol is parsed from "" or from tokens that produce no atoms;
+    # treat it as invalid.
+    return mol.GetNumAtoms() > 0
